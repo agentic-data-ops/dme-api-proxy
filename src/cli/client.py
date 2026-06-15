@@ -21,12 +21,18 @@ def main() -> None:
     parser.add_argument("--once", action="store_true", help="Single poll cycle, then exit")
     args = parser.parse_args()
 
-    config = ProxyClientConfig(
-        server=args.server or ProxyClientConfig().server,
-        endpoint=args.endpoint or ProxyClientConfig().endpoint,
-        username=args.username,
-        password=args.password,
-    )
+    # Only pass explicitly provided args; let dataclass defaults
+    # (which read env vars) handle the rest
+    kwargs: dict[str, object] = {}
+    if args.server:
+        kwargs["server"] = args.server
+    if args.endpoint:
+        kwargs["endpoint"] = args.endpoint
+    if args.username:
+        kwargs["username"] = args.username
+    if args.password:
+        kwargs["password"] = args.password
+    config = ProxyClientConfig(**kwargs)
 
     client = DMEProxyClient(config)
 
