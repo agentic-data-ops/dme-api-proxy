@@ -30,3 +30,7 @@ class ProxyHandler:
     async def submit_response(self, resp: ProxyResponse) -> None:
         """Publish a response back (called by client via /respond)."""
         await self._queue.publish_response(resp)
+
+    def list_pending(self) -> list[dict]:
+        """Snapshot of pending (not yet consumed) requests."""
+        return self._queue.list_pending()

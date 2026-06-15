@@ -18,3 +18,8 @@ class MessageQueue(ABC):
 
     @abstractmethod
     async def consume_response(self, request_id: str) -> ProxyResponse | None: ...
+
+    @abstractmethod
+    def list_pending(self) -> list[dict]:
+        """Return a snapshot of pending requests: [{id, method, uri}, ...]."""
+        ...

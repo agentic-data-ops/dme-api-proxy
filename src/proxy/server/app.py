@@ -42,6 +42,14 @@ async def submit_response(resp: ProxyResponse):
     return Response("ok", status_code=200)
 
 
+@app.get("/")
+async def root():
+    """Root endpoint — returns pending requests in the queue."""
+    if handler is None:
+        return Response("Server not initialized", status_code=500)
+    return handler.list_pending()
+
+
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"])
 async def proxy_entry(path: str, request: Request):
     """Catch-all proxy endpoint — forwards to DME via the message queue."""

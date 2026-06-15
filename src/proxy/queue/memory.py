@@ -35,3 +35,10 @@ class MemoryQueue(MessageQueue):
         except asyncio.TimeoutError:
             self._response_map.pop(request_id, None)
             return None
+
+    def list_pending(self) -> list[dict]:
+        """Snapshot of all queued (not yet consumed) requests."""
+        return [
+            {"id": req.request_id, "method": req.method, "uri": req.uri}
+            for req in list(self._request_queue._queue)
+        ]
