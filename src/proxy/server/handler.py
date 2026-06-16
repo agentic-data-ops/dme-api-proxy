@@ -1,5 +1,7 @@
 """Request/response handling logic for the Proxy Server."""
 
+import json
+
 from fastapi import Response
 from proxy.models import ProxyRequest, ProxyResponse
 from proxy.queue.interface import MessageQueue
@@ -16,7 +18,15 @@ class ProxyHandler:
         await self._queue.publish_request(req)
         resp = await self._queue.consume_response(req.request_id)
         if resp is None:
-            return Response("Gateway Timeout", status_code=504)
+            return Response(
+                content=json.dumps(
+                    {
+                        "error_msg": "Request timeout, no proxy client handle the request",
+                    }
+                ),
+                status_code=504,
+                media_type="application/json",
+            )
         return Response(
             content=resp.body,
             status_code=resp.status_code,
