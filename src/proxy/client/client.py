@@ -51,7 +51,7 @@ class DMEProxyClient:
             "userName": self._config.username,
             "value": self._config.password,
         }
-        with httpx.Client(proxy=None, verify=VERIFY_SSL, timeout=REQUEST_TIMEOUT) as c:
+        with httpx.Client(trust_env=False, verify=VERIFY_SSL, timeout=REQUEST_TIMEOUT) as c:
             resp = c.put(url, headers=self._headers, json=body)
         if resp.status_code != 200:
             raise RuntimeError(
@@ -78,7 +78,7 @@ class DMEProxyClient:
         )
         async with (
             httpx.AsyncClient() as http,
-            httpx.AsyncClient(proxy=None) as dme_http,
+            httpx.AsyncClient(trust_env=False) as dme_http,
         ):
             while True:
                 try:
@@ -95,7 +95,7 @@ class DMEProxyClient:
         """Single poll cycle — for one-shot / testing use."""
         async with (
             httpx.AsyncClient() as http,
-            httpx.AsyncClient(proxy=None) as dme_http,
+            httpx.AsyncClient(trust_env=False) as dme_http,
         ):
             req = await self._poll(http)
             if req is None:
