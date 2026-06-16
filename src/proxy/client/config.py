@@ -23,7 +23,7 @@ class ProxyClientConfig:
     password: str | None = field(
         default_factory=lambda: os.environ.get("DME_API_PASSWORD")
     )
-    response_limit: int = 500
+    response_limit: int = 100000
 
     def __post_init__(self) -> None:
         if not self.endpoint:
