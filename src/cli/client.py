@@ -18,6 +18,8 @@ def main() -> None:
     parser.add_argument("--endpoint", help="DME API endpoint (or DME_API_ENDPOINT)")
     parser.add_argument("--username", help="DME username (or DME_API_USERNAME)")
     parser.add_argument("--password", help="DME password (or DME_API_PASSWORD)")
+    parser.add_argument("--response-limit", type=int, default=500,
+                        help="Max response body length from DME (default: 500)")
     parser.add_argument("--once", action="store_true", help="Single poll cycle, then exit")
     args = parser.parse_args()
 
@@ -32,6 +34,7 @@ def main() -> None:
         kwargs["username"] = args.username
     if args.password:
         kwargs["password"] = args.password
+    kwargs["response_limit"] = args.response_limit
     config = ProxyClientConfig(**kwargs)
 
     client = DMEProxyClient(config)

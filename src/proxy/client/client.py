@@ -163,11 +163,34 @@ class DMEProxyClient:
             timeout=REQUEST_TIMEOUT,
         )
 
+        # ── Check response body length limit ──
+        body = r.text
+        if len(body) > self._config.response_limit:
+            # Compact JSON (remove indent) then truncate for sample
+            try:
+                compact = json.dumps(json.loads(body), ensure_ascii=False, separators=(",", ":"))
+            except (json.JSONDecodeError, TypeError):
+                compact = body
+            sample = compact[: self._config.response_limit]
+            body = json.dumps(
+                {
+                    "error_msg": "Response data too long, please set limit or page size",
+                    "response_sample": sample,
+                },
+                ensure_ascii=False,
+            )
+            logger.warning(
+                "Response body length %d exceeds limit %d — truncated for request_id=%s",
+                len(r.text),
+                self._config.response_limit,
+                req.request_id,
+            )
+
         return ProxyResponse(
             request_id=req.request_id,
             status_code=r.status_code,
             headers=dict(r.headers),
-            body=r.text,
+            body=body,
         )
 
     async def _callback(self, http: httpx.AsyncClient, resp: ProxyResponse) -> None:
