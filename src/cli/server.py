@@ -8,8 +8,8 @@ from proxy.server.app import init_app
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="DME Proxy Server")
-    parser.add_argument("--host", default="127.0.0.1", help="Bind host")
-    parser.add_argument("--port", type=int, default=26335, help="Bind port")
+    parser.add_argument("--host", default="0.0.0.0", help="Bind host")
+    parser.add_argument("--port", type=int, default=80, help="Bind port")
     args = parser.parse_args()
 
     queue = MemoryQueue()

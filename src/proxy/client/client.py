@@ -51,13 +51,8 @@ class DMEProxyClient:
             "userName": self._config.username,
             "value": self._config.password,
         }
-        resp = httpx.put(
-            url,
-            headers=self._headers,
-            json=body,
-            verify=VERIFY_SSL,
-            timeout=REQUEST_TIMEOUT,
-        )
+        with httpx.Client(proxy=None, verify=VERIFY_SSL, timeout=REQUEST_TIMEOUT) as c:
+            resp = c.put(url, headers=self._headers, json=body)
         if resp.status_code != 200:
             raise RuntimeError(
                 f"DME login failed (HTTP {resp.status_code}): {resp.text}"
@@ -81,26 +76,32 @@ class DMEProxyClient:
             self._config.server,
             self._config.endpoint,
         )
-        async with httpx.AsyncClient() as http:
+        async with (
+            httpx.AsyncClient() as http,
+            httpx.AsyncClient(proxy=None) as dme_http,
+        ):
             while True:
                 try:
                     req = await self._poll(http)
                     if req is None:
                         await asyncio.sleep(0.5)
                         continue
-                    resp = await self._forward_to_dme(req, http)
+                    resp = await self._forward_to_dme(req, dme_http)
                     await self._callback(http, resp)
                 except Exception:
                     logger.exception("Poll cycle failed")
 
     async def poll_once(self) -> None:
         """Single poll cycle — for one-shot / testing use."""
-        async with httpx.AsyncClient() as http:
+        async with (
+            httpx.AsyncClient() as http,
+            httpx.AsyncClient(proxy=None) as dme_http,
+        ):
             req = await self._poll(http)
             if req is None:
                 logger.info("No pending request")
                 return
-            resp = await self._forward_to_dme(req, http)
+            resp = await self._forward_to_dme(req, dme_http)
             await self._callback(http, resp)
 
     # ── internal: poll → forward → callback ────────────────────────────
