@@ -50,7 +50,7 @@ async def root():
     return handler.list_pending()
 
 
-@app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"])
+@app.api_route("/rest/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"])
 async def proxy_entry(path: str, request: Request):
     """Catch-all proxy endpoint — forwards to DME via the message queue."""
     if handler is None:
@@ -60,7 +60,7 @@ async def proxy_entry(path: str, request: Request):
     proxy_req = ProxyRequest(
         request_id=str(uuid.uuid4()),
         method=request.method,
-        uri=f"/{path}",
+        uri=f"/rest/{path}",
         headers=dict(request.headers),
         params=dict(request.query_params),
         body=body.decode("utf-8") if body else None,
