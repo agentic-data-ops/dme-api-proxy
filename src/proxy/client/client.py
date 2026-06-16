@@ -78,7 +78,7 @@ class DMEProxyClient:
         )
         async with (
             httpx.AsyncClient() as http,
-            httpx.AsyncClient(trust_env=False) as dme_http,
+            httpx.AsyncClient(trust_env=False, verify=VERIFY_SSL) as dme_http,
         ):
             while True:
                 try:
@@ -95,7 +95,7 @@ class DMEProxyClient:
         """Single poll cycle — for one-shot / testing use."""
         async with (
             httpx.AsyncClient() as http,
-            httpx.AsyncClient(trust_env=False) as dme_http,
+            httpx.AsyncClient(trust_env=False, verify=VERIFY_SSL) as dme_http,
         ):
             req = await self._poll(http)
             if req is None:
