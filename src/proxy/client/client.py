@@ -88,8 +88,12 @@ class DMEProxyClient:
                         continue
                     resp = await self._forward_to_dme(req, dme_http)
                     await self._callback(http, resp)
+                except httpx.HTTPError:
+                    logger.warning("Poll cycle failed (server unavailable?), retry in 1s")
+                    await asyncio.sleep(1)
                 except Exception:
                     logger.exception("Poll cycle failed")
+                    await asyncio.sleep(1)
 
     async def poll_once(self) -> None:
         """Single poll cycle — for one-shot / testing use."""
