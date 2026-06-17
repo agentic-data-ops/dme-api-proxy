@@ -8,8 +8,10 @@ from proxy.queue.interface import MessageQueue
 class MemoryQueue(MessageQueue):
     """In-memory queue for single-process development/testing."""
 
-    def __init__(self, response_timeout: float = 30.0) -> None:
-        self._request_queue: asyncio.Queue[ProxyRequest] = asyncio.Queue()
+    def __init__(self, response_timeout: float = 300.0, max_queue_length: int = 0) -> None:
+        self._request_queue: asyncio.Queue[ProxyRequest] = asyncio.Queue(
+            maxsize=max_queue_length if max_queue_length > 0 else 0
+        )
         self._response_map: dict[str, asyncio.Future[ProxyResponse]] = {}
         self._response_timeout = response_timeout
 
