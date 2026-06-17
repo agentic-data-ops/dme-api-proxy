@@ -20,7 +20,7 @@ DEFAULT_HEADERS = {
 }
 LOGIN_PATH = "/rest/plat/smapp/v1/sessions"
 SESSION_TIMEOUT = 900  # seconds before re-login
-REQUEST_TIMEOUT = 30
+REQUEST_TIMEOUT = 30  # fallback when config.timeout is not set
 VERIFY_SSL = False
 
 
@@ -32,6 +32,7 @@ class DMEProxyClient:
         self._base_url = self._config.endpoint.rstrip("/")
         self._headers = dict(DEFAULT_HEADERS)
         self._last_accessed: float = 0
+        self._timeout = self._config.request_timeout
 
         # Auto-login on startup
         self._login()
@@ -51,7 +52,7 @@ class DMEProxyClient:
             "userName": self._config.username,
             "value": self._config.password,
         }
-        with httpx.Client(trust_env=False, verify=VERIFY_SSL, timeout=REQUEST_TIMEOUT) as c:
+        with httpx.Client(trust_env=False, verify=VERIFY_SSL, timeout=self._timeout) as c:
             resp = c.put(url, headers=self._headers, json=body)
         if resp.status_code != 200:
             raise RuntimeError(
@@ -164,7 +165,7 @@ class DMEProxyClient:
             headers=merged_headers,
             json=body_dict if isinstance(body_dict, dict) else None,
             content=json.dumps(body_dict) if isinstance(body_dict, str) else None,
-            timeout=REQUEST_TIMEOUT,
+            timeout=self._timeout,
         )
 
         # ── Check response body length limit ──
