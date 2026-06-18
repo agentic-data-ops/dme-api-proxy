@@ -152,9 +152,11 @@ class DMEProxyClient:
         url = f"{self._base_url}{req.uri.format(**path_params)}"
 
         # ── Merge headers: auth headers base + request headers override ──
+        # Strip transport-level headers — httpx handles them internally
+        _skip_headers = {"host", "content-length", "accept-encoding", "transfer-encoding", "content-encoding"}
         merged_headers = dict(self._headers)
         for k, v in req.headers.items():
-            if k.lower() not in ("host", "content-length"):
+            if k.lower() not in _skip_headers:
                 merged_headers[k] = v
 
         # ── Make the call ──
@@ -168,8 +170,19 @@ class DMEProxyClient:
             timeout=self._timeout,
         )
 
-        # ── Check response body length limit ──
-        body = r.text
+        # ── Read body, handling malformed gzip from DME ──
+        try:
+            body = r.text
+        except httpx.DecodingError:
+            # DME sometimes sends Content-Encoding: gzip on non-gzip data
+            # Fall back to raw bytes and decode manually
+            logger.warning(
+                "DME returned malformed gzip response for %s %s — reading raw",
+                req.method, url,
+            )
+            raw_chunks = [chunk async for chunk in r.aiter_raw()]
+            raw_content = b"".join(raw_chunks)
+            body = raw_content.decode("utf-8", errors="replace")
         if len(body) > self._config.response_limit:
             # Compact JSON (remove indent) then truncate for sample
             try:
